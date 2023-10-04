@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+import shlex
+import sys  # Add sys module
+
+# Define default values
+default_mode = "View"
+default_cmd = "AtomicParsley"
+default_desc = "AtomicParsley Wrapper"
+mode = default_mode
+cmd = default_cmd
+desc = default_desc
+files = []
+title = ""
+year = ""
+DeepScan = False
+t = False
+
+DEBUG = False
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="AtomicParsley Wrapper")
+parser.add_argument("-t", action="store_true", help="View Existing Metadata")
+parser.add_argument("--title", type=str, help="Set the Title metadata")
+parser.add_argument("--year", type=str, help="Set the Year metadata")
+parser.add_argument("--DeepScan", action="store_true", help="Perform a deep scan")
+parser.add_argument("--helpmessage", action="help", help="Display this help message")  # Changed --help to --helpmessage
+
+args, remaining_args = parser.parse_known_args()
+
+title = args.title
+year = args.year
+DeepScan = args.DeepScan
+t = args.t
+
+# Check if no command-line arguments are provided and display usage
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
+
+# Count non-switch arguments (files)
+num_files = len(remaining_args)
+
+# Check the number of files provided
+if num_files > 0:
+    files = remaining_args
+    mode = "Modify"
+elif t:
+    mode = "View"
+elif not t and num_files > 0:
+    mode = "View"
+else:
+    mode = "Usage"
+
+# default mode is view
+if not t and not title and not year and not DeepScan:
+    mode = "View"
+
+# Print the detected mode
+if DEBUG:
+    print("Mode:", mode)
+
+# Construct the command based on the mode and arguments
+for file in files:
+    command = []
+    if mode == "View":
+        command = [cmd, file, "-t"]
+    elif mode == "Modify":
+        command = [cmd, file]
+        if title:
+            command.extend(["--title", title])
+        if year:
+            command.extend(["--year", year])
+        command.extend(["--encodingTool", ""])  # Set --encodingTool with an empty value
+        command.append("--overWrite")
+        if DeepScan:
+            command.append("--DeepScan")
+
+    # Print the constructed command
+    if DEBUG:
+        print("Command:", " ".join(shlex.quote(arg) for arg in command))
+
+    # Execute the command using subprocess if the command list is not empty
+    if command:
+        if DEBUG:
+            print("Executing command:", " ".join(shlex.quote(arg) for arg in command))
+        print("File:", file)
+        print("----------------------------------------------------------------")
+        subprocess.run(command)
+        if num_files > 0:
+            print()
+    else:
+        print("No valid command to execute.")
+
