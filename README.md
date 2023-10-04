@@ -27,4 +27,3 @@ To use the wrapper, run the `ap` script with appropriate command-line options:
 
 ```bash
 ./ap [options] [files]
-
