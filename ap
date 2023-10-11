@@ -17,14 +17,12 @@ title = ""
 year = ""
 DeepScan = False
 t = False
-notools = False
 
-DEBUG = True
+DEBUG = False
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="AtomicParsley Wrapper")
 parser.add_argument("-t", action="store_true", help="View Existing Metadata")
-parser.add_argument("--notools", action="store_true", help="Remove Encoding Tools Metadata")
 parser.add_argument("--title", type=str, help="Set the Title metadata")
 parser.add_argument("--year", type=str, help="Set the Year metadata")
 parser.add_argument("--DeepScan", action="store_true", help="Perform a deep scan")
@@ -35,11 +33,7 @@ args, remaining_args = parser.parse_known_args()
 title = args.title
 year = args.year
 DeepScan = args.DeepScan
-notools = args.notools
 t = args.t
-
-
-print(notools)
 
 # Check if no command-line arguments are provided and display usage
 if len(sys.argv) == 1:
@@ -64,12 +58,6 @@ else:
 if not t and not title and not year and not DeepScan:
     mode = "View"
 
-# wipe the tools metadata
-if notools:
-    files = remaining_args
-    mode = "Modify"
-print(f"notools: {notools}")
-
 # Print the detected mode
 if DEBUG:
     print("Mode:", mode)
@@ -85,10 +73,7 @@ for file in files:
             command.extend(["--title", title])
         if year:
             command.extend(["--year", year])
-        if notools:
-            command.extend(["--encodingTool", ""])  # Set --encodingTool with an empty value
-        else:
-            command.extend(["--encodingTool", ""])  # Set --encodingTool with an empty value
+        command.extend(["--encodingTool", ""])  # Set --encodingTool with an empty value
         command.append("--overWrite")
         if DeepScan:
             command.append("--DeepScan")
