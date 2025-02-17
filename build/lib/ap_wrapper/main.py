@@ -56,10 +56,6 @@ def build_command(cmd: str, file: str, args: argparse.Namespace, mode: str) -> L
             command.extend(["--title", args.title])
         if args.year:
             command.extend(["--year", args.year])
-        if args.imdb:
-            command.extend(["--xID", f"IMDbID={args.imdb}"])
-        if args.thetvdb:
-            command.extend(["--xID", f"TheTVDB={args.thetvdb}"])
         if args.notools:
             command.extend(["--encodingTool", ""])
         else:
@@ -88,8 +84,6 @@ def main() -> None:
     parser.add_argument("--longdesc", type=str, help="Set the long description metadata")
     parser.add_argument("--advisory", type=str, help="Set the advisory metadata to 'clean' or 'explicit'")
     parser.add_argument("--year", type=str, help="Set the Year metadata")
-    parser.add_argument("--imdb", type=str, help="Set the IMDb ID (e.g., tt11548850)")
-    parser.add_argument("--thetvdb", type=str, help="Set the TheTVDB ID")
     parser.add_argument("--DeepScan", action="store_true", default=False, help="Perform a deep scan")
     parser.add_argument("--wipe", action="store_true", default=False, help="Wipe all metadata (ignores other metadata switches)")
     parser.add_argument("files", nargs="*", help="Media files to process")
@@ -122,12 +116,10 @@ def main() -> None:
     # Determine mode
     if not args.t and not args.title and not args.year and not args.DeepScan and \
        not args.season and not args.episode and not args.show and not args.genre and \
-       not args.desc and not args.longdesc and not args.advisory and not args.imdb and \
-       not args.thetvdb:
+       not args.desc and not args.longdesc and not args.advisory:
         mode = "View"
     elif args.notools or args.title or args.year or args.season or args.episode or \
-         args.show or args.genre or args.desc or args.longdesc or args.advisory or \
-         args.imdb or args.thetvdb:
+         args.show or args.genre or args.desc or args.longdesc or args.advisory:
         mode = "Modify"
 
     # Process each file
