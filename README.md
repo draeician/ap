@@ -7,7 +7,7 @@ A Python-based command-line wrapper for AtomicParsley that simplifies metadata m
 - View and modify metadata in media files (MP4, M4V)
 - Set various metadata fields including title, year, TV show information, and more
 - Set IMDb and TheTVDB IDs
-- Perform deep scans for metadata
+- Perform deep scans for metadata in normally skipped areas
 - Remove encoding tool metadata
 - Wipe all metadata
 - Simple command-line interface
@@ -56,7 +56,7 @@ ap [options] [files]
 | `--advisory {clean,explicit}` | Set the advisory metadata |
 | `--imdb TEXT` | Set the IMDb ID (e.g., tt11548850) |
 | `--thetvdb TEXT` | Set the TheTVDB ID |
-| `--DeepScan` | Perform a deep scan for metadata |
+| `--DeepScan` | Parse areas of the file that are normally skipped for thorough metadata examination |
 | `--notools` | Remove Encoding Tools metadata |
 | `--wipe` | Wipe all metadata (ignores other metadata switches) |
 
@@ -82,12 +82,17 @@ ap --show "My Show" --season "1" --episode "5" episode.mp4
 ap --imdb "tt11548850" movie.mp4
 ```
 
-5. Remove all metadata:
+5. View all metadata including normally skipped areas:
+```bash
+ap -t --DeepScan video.mp4
+```
+
+6. Remove all metadata:
 ```bash
 ap --wipe video.mp4
 ```
 
-6. Process multiple files:
+7. Process multiple files:
 ```bash
 ap --title "Common Title" file1.mp4 file2.mp4
 ```
@@ -104,6 +109,10 @@ ap --title "Common Title" file1.mp4 file2.mp4
 - The tool will automatically ignore files with unsupported extensions
 - Changes are always made with the `--overWrite` flag to modify files in place
 - IMDb IDs should be in the format "tt" followed by numbers (e.g., tt11548850)
+- The `--DeepScan` option performs a thorough examination of the file's metadata, including areas that are normally skipped. This is useful for:
+  - Finding hidden or non-standard metadata
+  - Working with high-resolution AVC video files for iPod
+  - Ensuring all metadata areas are examined
 
 ## License
 
