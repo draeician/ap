@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ap-wrapper",
-    version="1.0.0",
+    version="1.1.0",
     description="AtomicParsley Wrapper - A user-friendly interface for AtomicParsley",
     author="Draeician",
     packages=find_packages(),

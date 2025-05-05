@@ -5,7 +5,9 @@ A Python-based command-line wrapper for AtomicParsley that simplifies metadata m
 ## Features
 
 - View and modify metadata in media files (MP4, M4V)
+- User-friendly metadata display with clear, consistent formatting
 - Set various metadata fields including title, year, TV show information, and more
+- Mirror metadata between files, including encoding tool information
 - Set IMDb and TheTVDB IDs
 - Perform deep scans for metadata in normally skipped areas
 - Remove encoding tool metadata
@@ -45,6 +47,7 @@ ap [options] [files]
 | Option | Description |
 |--------|-------------|
 | `-t` | View existing metadata |
+| `-m, --mirror FILE` | Mirror metadata from specified file |
 | `--title TEXT` | Set the Title metadata |
 | `--year TEXT` | Set the Year metadata |
 | `--episode TEXT` | Set the TV Episode Number metadata |
@@ -95,6 +98,11 @@ ap --wipe video.mp4
 7. Process multiple files:
 ```bash
 ap --title "Common Title" file1.mp4 file2.mp4
+```
+
+8. Mirror metadata from one file to another:
+```bash
+ap -m source.mp4 target.mp4
 ```
 
 ## Supported File Types

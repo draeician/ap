@@ -1,1 +1,6 @@
 *.mp4
+ap_wrapper.egg-info/
+build/
+
+venv/
+.env
