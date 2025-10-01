@@ -37,23 +37,23 @@ def get_metadata(cmd: str, file: str) -> dict:
         # Parse metadata from output
         for line in output.splitlines():
             # Handle atom-style output (when using just AtomicParsley file -t)
-            if "©gen" in line and "contains:" in line:
+            if '"©gen"' in line and "contains:" in line:
                 metadata["genre"] = line.split("contains:")[1].strip()
-            elif "desc" in line and "contains:" in line:
+            elif '"desc"' in line and "contains:" in line:
+                metadata["url"] = line.split("contains:")[1].strip()
+            elif '"ldes"' in line and "contains:" in line:
                 metadata["desc"] = line.split("contains:")[1].strip()
-            elif "ldes" in line and "contains:" in line:
-                metadata["longdesc"] = line.split("contains:")[1].strip()
-            elif "©day" in line and "contains:" in line:
+            elif '"©day"' in line and "contains:" in line:
                 metadata["year"] = line.split("contains:")[1].strip()
-            elif "©nam" in line and "contains:" in line:
+            elif '"©nam"' in line and "contains:" in line:
                 metadata["title"] = line.split("contains:")[1].strip()
-            elif "tvnn" in line and "contains:" in line:
+            elif '"tvnn"' in line and "contains:" in line:
                 metadata["show"] = line.split("contains:")[1].strip()
-            elif "tves" in line and "contains:" in line:
+            elif '"tves"' in line and "contains:" in line:
                 metadata["episode"] = line.split("contains:")[1].strip()
-            elif "tvsn" in line and "contains:" in line:
+            elif '"tvsn"' in line and "contains:" in line:
                 metadata["season"] = line.split("contains:")[1].strip()
-            elif "©too" in line and "contains:" in line:
+            elif '"©too"' in line and "contains:" in line:
                 metadata["encodingTool"] = line.split("contains:")[1].strip()
             # Handle --textdata style output (with =>)
             elif "TVEpisodeNum" in line and "=>" in line:
@@ -116,8 +116,8 @@ def build_command(cmd: str, file: str, args: argparse.Namespace, mode: str) -> L
                 command.extend(["--genre", source_metadata["genre"]])
             if source_metadata.get("desc"):
                 command.extend(["--description", source_metadata["desc"]])
-            if source_metadata.get("longdesc"):
-                command.extend(["--long", source_metadata["longdesc"]])
+            if source_metadata.get("url"):
+                command.extend(["--desc", source_metadata["url"]])
             if source_metadata.get("advisory"):
                 command.extend(["--advisory", source_metadata["advisory"]])
             if source_metadata.get("title"):
@@ -149,9 +149,9 @@ def build_command(cmd: str, file: str, args: argparse.Namespace, mode: str) -> L
             if args.genre:
                 command.extend(["--genre", args.genre])
             if args.desc:
-                command.extend(["--description", args.desc])
-            if args.longdesc:
-                command.extend(["--long", args.longdesc])
+                command.extend(["--long", args.desc])
+            if args.url:
+                command.extend(["--desc", args.url])
             if args.advisory:
                 command.extend(["--advisory", args.advisory])
             if args.title:
@@ -198,7 +198,7 @@ def main() -> None:
     parser.add_argument("--show", type=str, help="Set the TV show name metadata")
     parser.add_argument("--genre", type=str, help="Set the genre metadata (comma separated values)")
     parser.add_argument("--desc", type=str, help="Set the description metadata")
-    parser.add_argument("--longdesc", type=str, help="Set the long description metadata")
+    parser.add_argument("--url", type=str, help="Set the URL metadata")
     parser.add_argument("--advisory", type=str, help="Set the advisory metadata to 'clean' or 'explicit'")
     parser.add_argument("--year", type=str, help="Set the year metadata")
     parser.add_argument("--imdb", type=str, help="Set the IMDb ID (e.g., tt11548850)")
@@ -235,11 +235,11 @@ def main() -> None:
     # Determine mode
     if not args.t and not args.title and not args.year and not args.DeepScan and \
        not args.season and not args.episode and not args.show and not args.genre and \
-       not args.desc and not args.longdesc and not args.advisory and not args.imdb and \
+       not args.desc and not args.url and not args.advisory and not args.imdb and \
        not args.thetvdb and not args.mirror and not args.notools:
         mode = "View"
     elif args.notools or args.title or args.year or args.season or args.episode or \
-         args.show or args.genre or args.desc or args.longdesc or args.advisory or \
+         args.show or args.genre or args.desc or args.url or args.advisory or \
          args.imdb or args.thetvdb or args.mirror:
         mode = "Modify"
 
@@ -268,8 +268,8 @@ def main() -> None:
                         print(f"Genre: {metadata['genre']}")
                     if metadata.get("desc"):
                         print(f"Description: {metadata['desc']}")
-                    if metadata.get("longdesc"):
-                        print(f"Long Description: {metadata['longdesc']}")
+                    if metadata.get("url"):
+                        print(f"URL: {metadata['url']}")
                     if metadata.get("year"):
                         print(f"Year: {metadata['year']}")
                     if metadata.get("advisory"):
