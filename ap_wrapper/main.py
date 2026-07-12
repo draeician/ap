@@ -443,12 +443,13 @@ def main() -> None:
         sys.exit(1)
 
     # Determine mode
+    # Note: --wipe must count as Modify; otherwise build_command's wipe path never runs.
     if not args.t and not args.title and not args.year and not args.DeepScan and \
        not args.season and not args.episode and not args.show and not args.genre and \
        not args.desc and not args.longdesc and not args.url and not args.advisory and not args.imdb and \
-       not args.thetvdb and not args.mirror and not args.notools and not args.meta:
+       not args.thetvdb and not args.mirror and not args.notools and not args.meta and not args.wipe:
         mode = "View"
-    elif args.meta or args.notools or args.title or args.year or args.season or args.episode or \
+    elif args.wipe or args.meta or args.notools or args.title or args.year or args.season or args.episode or \
          args.show or args.genre or args.desc or args.longdesc or args.url or args.advisory or \
          args.imdb or args.thetvdb or args.mirror:
         mode = "Modify"
