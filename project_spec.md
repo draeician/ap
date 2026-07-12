@@ -49,7 +49,7 @@ ap/
 | Mirror | `-m SOURCE` | Copy fields from source; migrate old format if needed |
 | Wipe | `--wipe` | `--metaEnema --overWrite` (ignores other meta flags) |
 | DeepScan | `--DeepScan` | Forward to AtomicParsley |
-| No tools | `--notools` | Clear encoding tool atom |
+| No tools | any metadata write; `--notools` alone | Clear encoding tool atom (`--encodingTool ""`). Default on Modify/`--meta`; view-only never clears. `--notools` alone clears tools without other field changes |
 
 Supported extensions: `.mp4`, `.m4v`.
 

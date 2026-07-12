@@ -60,7 +60,7 @@ ap [options] [files]
 | `--imdb TEXT` | Set the IMDb ID (e.g., tt11548850) |
 | `--thetvdb TEXT` | Set the TheTVDB ID |
 | `--DeepScan` | Parse areas of the file that are normally skipped for thorough metadata examination |
-| `--notools` | Remove Encoding Tools metadata |
+| `--notools` | Clear encoding tool only (no other fields). Encoding tool is also cleared automatically on any metadata update |
 | `--meta` | Derive title, TV show, season, and episode from the filename (meta_update.pl style) and clear encoding tool |
 | `--wipe` | Wipe all metadata (ignores other metadata switches) |
 

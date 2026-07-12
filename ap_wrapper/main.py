@@ -319,15 +319,6 @@ def build_command(cmd: str, file: str, args: argparse.Namespace, mode: str) -> L
                 command.extend(["--xID", f"IMDbID={migrated_metadata['imdb']}"])
             if migrated_metadata.get("thetvdb"):
                 command.extend(["--xID", f"TheTVDB={migrated_metadata['thetvdb']}"])
-            
-            # Always set encoding tool when mirroring, either to source value,
-            # empty string if notools is set, or empty string if no encoding tool exists
-            if args.notools:
-                command.extend(["--encodingTool", ""])
-            elif migrated_metadata.get("encodingTool"):
-                command.extend(["--encodingTool", migrated_metadata["encodingTool"]])
-            else:
-                command.extend(["--encodingTool", ""])
                 
         else:
             # Handle regular metadata arguments
@@ -355,10 +346,10 @@ def build_command(cmd: str, file: str, args: argparse.Namespace, mode: str) -> L
                 command.extend(["--xID", f"IMDbID={args.imdb}"])
             if args.thetvdb:
                 command.extend(["--xID", f"TheTVDB={args.thetvdb}"])
-            
-            # Only add encoding tool if notools flag is set
-            if args.notools:
-                command.extend(["--encodingTool", ""])
+
+        # Default on any metadata write: clear encoding tool (©too).
+        # View-only paths never reach here. --wipe uses --metaEnema instead.
+        command.extend(["--encodingTool", ""])
         
         command.append("--overWrite")
         if args.DeepScan:
@@ -379,14 +370,19 @@ def main() -> None:
                "  ap -t video.mp4                  View metadata in raw format\n"
                "  ap -m source.mp4 target.mp4      Copy all metadata from source to target\n"
                "  ap --title 'My Video' video.mp4  Set title for video\n"
-               "  ap --notools video.mp4           Remove encoding tool metadata\n"
+               "  ap --notools video.mp4           Clear encoding tool only (no other fields)\n"
                "  ap --meta                        Tag all .mp4/.m4v in cwd from filenames\n"
                "  ap --meta ep.mp4                 Tag episode file from its filename",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("-t", action="store_true", default=False, help="View metadata in raw AtomicParsley format")
     parser.add_argument("-m", "--mirror", type=str, help="Mirror all metadata from specified file")
-    parser.add_argument("--notools", action="store_true", default=False, help="Remove encoding tool metadata")
+    parser.add_argument(
+        "--notools",
+        action="store_true",
+        default=False,
+        help="Clear encoding tool only (no other fields). Also applied automatically on any metadata update",
+    )
     parser.add_argument(
         "--meta",
         action="store_true",

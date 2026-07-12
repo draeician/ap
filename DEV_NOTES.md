@@ -20,7 +20,7 @@ This document provides a comprehensive mapping between the ap wrapper command li
 | `--advisory` | `--advisory` | `"rtng"` | Content advisory rating |
 | `--imdb` | `--xID` | `"xid "` | IMDb ID |
 | `--thetvdb` | `--xID` | `"xid "` | TheTVDB ID |
-| `--notools` | `--encodingTool ""` | `"©too"` | Remove encoding tool info |
+| `--notools` (and any metadata write) | `--encodingTool ""` | `"©too"` | Clear encoding tool. Applied automatically on every Modify/`--meta` write; view-only never clears. Flag alone clears tools without other field changes |
 
 ### AtomicParsley Raw Output Format
 
