@@ -61,6 +61,7 @@ ap [options] [files]
 | `--thetvdb TEXT` | Set the TheTVDB ID |
 | `--DeepScan` | Parse areas of the file that are normally skipped for thorough metadata examination |
 | `--notools` | Remove Encoding Tools metadata |
+| `--meta` | Derive title, TV show, season, and episode from the filename (meta_update.pl style) and clear encoding tool |
 | `--wipe` | Wipe all metadata (ignores other metadata switches) |
 
 ### Examples
@@ -103,6 +104,12 @@ ap --title "Common Title" file1.mp4 file2.mp4
 8. Mirror metadata from one file to another:
 ```bash
 ap -m source.mp4 target.mp4
+```
+
+9. Tag files from filename conventions (`show_name-s01e01.mp4`):
+```bash
+ap --meta
+ap --meta episode.mp4
 ```
 
 ## Supported File Types
