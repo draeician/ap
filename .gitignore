@@ -6,3 +6,5 @@ venv/
 .env
 
 ISSUES.md
+
+ap_wrapper/__pycache__/
