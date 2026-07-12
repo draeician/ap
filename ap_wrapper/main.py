@@ -2,11 +2,161 @@
 
 import os
 import argparse
+import glob
 import subprocess
 import shlex
 import sys
 import re
+import signal
 from typing import List, Optional, Tuple
+
+
+def atomicparsley_temp_pattern(media_file: str) -> str:
+    """Return a glob pattern for AtomicParsley ``--overWrite`` temp files.
+
+    AtomicParsley writes to ``{stem}-temp-{N}{ext}`` beside the source file,
+    where ``N`` is a random integer (not a PID), then renames the temp over
+    the original on success.
+
+    Args:
+        media_file: Path to the media file being written.
+
+    Returns:
+        Absolute glob pattern matching that file's temp siblings.
+    """
+    directory = os.path.dirname(os.path.abspath(media_file))
+    base = os.path.basename(media_file)
+    if "." in base:
+        stem, ext = base.rsplit(".", 1)
+        return os.path.join(directory, f"{stem}-temp-*.{ext}")
+    return os.path.join(directory, f"{base}-temp-*")
+
+
+def find_atomicparsley_temps(media_file: str) -> List[str]:
+    """List leftover AtomicParsley temp paths for ``media_file``.
+
+    Args:
+        media_file: Path to the media file that was being written.
+
+    Returns:
+        Sorted list of matching temp file paths.
+    """
+    return sorted(glob.glob(atomicparsley_temp_pattern(media_file)))
+
+
+def remove_atomicparsley_temps(media_file: str) -> List[str]:
+    """Remove leftover AtomicParsley ``--overWrite`` temp files if present.
+
+    Args:
+        media_file: Path to the media file that was being written.
+
+    Returns:
+        Paths that were successfully removed.
+    """
+    removed: List[str] = []
+    for path in find_atomicparsley_temps(media_file):
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+                removed.append(path)
+        except OSError as exc:
+            print(
+                f"Warning: could not remove temp file {path}: {exc}",
+                file=sys.stderr,
+            )
+    return removed
+
+
+def _terminate_process(proc: subprocess.Popen) -> None:
+    """Stop a child process, escalating from SIGINT to SIGKILL if needed."""
+    if proc.poll() is not None:
+        return
+    try:
+        proc.send_signal(signal.SIGINT)
+        proc.wait(timeout=2)
+    except (subprocess.TimeoutExpired, OSError):
+        try:
+            proc.kill()
+            proc.wait(timeout=2)
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+
+
+def run_atomicparsley(
+    command: List[str],
+    media_file: Optional[str] = None,
+    capture_output: bool = False,
+    text: bool = False,
+    check: bool = False,
+) -> subprocess.CompletedProcess:
+    """Run AtomicParsley and clean up on interrupt or leftover temps.
+
+    When ``--overWrite`` / ``-W`` is used, AtomicParsley creates a sibling
+    temp file named ``{stem}-temp-{random}{ext}``. Ctrl+C can leave that
+    file behind; this helper removes matching leftovers after the child
+    exits.
+
+    Args:
+        command: Full argv list (never passed through a shell).
+        media_file: Target media path; inferred from ``command[1]`` when omitted.
+        capture_output: Capture stdout/stderr like ``subprocess.run``.
+        text: Decode captured streams as text.
+        check: Raise ``CalledProcessError`` on non-zero exit (not on interrupt).
+
+    Returns:
+        CompletedProcess from the finished child.
+
+    Raises:
+        SystemExit: Exit code 130 after handling KeyboardInterrupt.
+        subprocess.CalledProcessError: When ``check`` is True and rc != 0.
+    """
+    if media_file is None and len(command) >= 2:
+        media_file = command[1]
+
+    is_overwrite = "--overWrite" in command or "-W" in command
+    stdout = subprocess.PIPE if capture_output else None
+    stderr = subprocess.PIPE if capture_output else None
+
+    proc = subprocess.Popen(
+        command,
+        stdout=stdout,
+        stderr=stderr,
+        text=text if capture_output else False,
+    )
+    interrupted = False
+    out, err = None, None
+    try:
+        out, err = proc.communicate()
+    except KeyboardInterrupt:
+        interrupted = True
+        _terminate_process(proc)
+        try:
+            out, err = proc.communicate(timeout=2)
+        except (subprocess.TimeoutExpired, ValueError, OSError):
+            pass
+
+    # Successful --overWrite renames temp → original; leftovers mean failure
+    # or interrupt (AtomicParsley may still exit 0 after SIGINT).
+    if is_overwrite and media_file is not None:
+        for path in remove_atomicparsley_temps(media_file):
+            print(f"Removed leftover temp file: {path}", file=sys.stderr)
+
+    if interrupted:
+        print("\nInterrupted.", file=sys.stderr)
+        sys.exit(130)
+
+    result = subprocess.CompletedProcess(
+        args=command,
+        returncode=proc.returncode if proc.returncode is not None else -1,
+        stdout=out,
+        stderr=err,
+    )
+    if check and result.returncode != 0:
+        raise subprocess.CalledProcessError(
+            result.returncode, command, output=out, stderr=err
+        )
+    return result
+
 
 def is_valid_extension(file_name: str) -> bool:
     """Check if the file has a valid extension for AtomicParsley processing.
@@ -210,7 +360,9 @@ def get_metadata(cmd: str, file: str) -> dict:
     Returns:
         dict: Dictionary of metadata values
     """
-    result = subprocess.run([cmd, file, "-t"], capture_output=True, text=True)
+    result = run_atomicparsley(
+        [cmd, file, "-t"], media_file=file, capture_output=True, text=True
+    )
     metadata = {}
     
     if result.returncode == 0:
@@ -414,7 +566,9 @@ def main() -> None:
 
     # Check if AtomicParsley is available
     try:
-        subprocess.run([default_cmd, "--version"], capture_output=True, check=True)
+        run_atomicparsley(
+            [default_cmd, "--version"], capture_output=True, check=True
+        )
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("Error: AtomicParsley is not installed or not in PATH")
         sys.exit(1)
@@ -481,12 +635,12 @@ def main() -> None:
                                 shlex.quote(part) for part in mirror_cmd
                             )
                         )
-                        subprocess.run(mirror_cmd)
+                        run_atomicparsley(mirror_cmd, media_file=file)
                 command = build_meta_command(
                     default_cmd, file, show, season, episode, title
                 )
                 print(" ".join(shlex.quote(part) for part in command))
-                subprocess.run(command)
+                run_atomicparsley(command, media_file=file)
         elif mode == "View":
             # Get metadata and display it in a consistent format
             metadata = get_metadata(default_cmd, file)
@@ -522,11 +676,11 @@ def main() -> None:
             else:
                 # Fallback to direct command if parsing fails
                 command = build_command(default_cmd, file, args, mode)
-                subprocess.run(command)
+                run_atomicparsley(command, media_file=file)
         else:
             command = build_command(default_cmd, file, args, mode)
             if command:
-                subprocess.run(command)
+                run_atomicparsley(command, media_file=file)
             else:
                 print("No valid command to execute.")
                 
@@ -534,4 +688,8 @@ def main() -> None:
             print()
 
 if __name__ == "__main__":
-    main() 
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nInterrupted.", file=sys.stderr)
+        sys.exit(130) 
