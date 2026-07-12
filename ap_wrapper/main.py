@@ -372,7 +372,8 @@ def main() -> None:
                "  ap --title 'My Video' video.mp4  Set title for video\n"
                "  ap --notools video.mp4           Clear encoding tool only (no other fields)\n"
                "  ap --meta                        Tag all .mp4/.m4v in cwd from filenames\n"
-               "  ap --meta ep.mp4                 Tag episode file from its filename",
+               "  ap --meta ep.mp4                 Tag episode file from its filename\n"
+               "  ap -m src.mp4 --meta a.mp4 b.mp4 Mirror shared fields, then per-file meta",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("-t", action="store_true", default=False, help="View metadata in raw AtomicParsley format")
@@ -387,7 +388,11 @@ def main() -> None:
         "--meta",
         action="store_true",
         default=False,
-        help="Derive title/show/season/episode from filename (meta_update.pl behavior) and clear encoding tool",
+        help=(
+            "Derive title/show/season/episode from filename (meta_update.pl behavior) "
+            "and clear encoding tool. With -m, mirror source fields first, then apply "
+            "per-file season/episode from each filename"
+        ),
     )
     parser.add_argument("--title", type=str, help="Set the title metadata")
     parser.add_argument("--episode", type=str, help="Set the TV episode number metadata")
@@ -463,6 +468,20 @@ def main() -> None:
                 print(f"Skipping {file}: could not parse sNNeNN from filename")
             else:
                 show, season, episode, title = parsed
+                # With -m: copy all fields from source first, then apply
+                # filename-derived title/show/season/episode so each target
+                # keeps its own episode numbers (not the source's for all).
+                if args.mirror and is_valid_extension(args.mirror):
+                    mirror_cmd = build_command(
+                        default_cmd, file, args, "Modify"
+                    )
+                    if mirror_cmd:
+                        print(
+                            " ".join(
+                                shlex.quote(part) for part in mirror_cmd
+                            )
+                        )
+                        subprocess.run(mirror_cmd)
                 command = build_meta_command(
                     default_cmd, file, show, season, episode, title
                 )

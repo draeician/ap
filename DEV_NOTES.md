@@ -91,6 +91,16 @@ When using the mirror mode:
 3. Apply migration if necessary
 4. Copy migrated metadata to target file(s)
 
+### Combined `--meta` + `-m`
+
+When both are given for one or more targets:
+1. Mirror all fields from the source onto each target (same as `-m` alone)
+2. Then apply `--meta` from each target’s filename (title, show, season, episode)
+
+This keeps shared fields (genre, description, year, IDs, …) from the source while
+ensuring season/episode (and title/show) are correct per file instead of copying
+the source’s season/episode onto every target.
+
 ### View Mode
 
 View mode displays metadata in a user-friendly format:

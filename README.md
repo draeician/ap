@@ -61,7 +61,7 @@ ap [options] [files]
 | `--thetvdb TEXT` | Set the TheTVDB ID |
 | `--DeepScan` | Parse areas of the file that are normally skipped for thorough metadata examination |
 | `--notools` | Clear encoding tool only (no other fields). Encoding tool is also cleared automatically on any metadata update |
-| `--meta` | Derive title, TV show, season, and episode from the filename (meta_update.pl style) and clear encoding tool |
+| `--meta` | Derive title, TV show, season, and episode from the filename (meta_update.pl style) and clear encoding tool. With `-m`, mirror source fields first, then apply per-file season/episode |
 | `--wipe` | Wipe all metadata (ignores other metadata switches) |
 
 ### Examples
@@ -111,6 +111,12 @@ ap -m source.mp4 target.mp4
 ap --meta
 ap --meta episode.mp4
 ```
+
+10. Mirror shared metadata from a source, then set per-file season/episode from filenames:
+```bash
+ap -m source.mp4 --meta show-s01e01.mp4 show-s01e02.mp4
+```
+This copies genre, description, year, and other fields from `source.mp4` first, then overwrites title/show/season/episode from each target filename so episodes are not all the same.
 
 ## Supported File Types
 

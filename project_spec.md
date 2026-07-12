@@ -47,6 +47,7 @@ ap/
 | View (raw) | `-t` | Pass through AtomicParsley `-t` |
 | Modify | metadata flags | Build argv + `--overWrite` |
 | Mirror | `-m SOURCE` | Copy fields from source; migrate old format if needed |
+| Meta | `--meta` | Title/show/season/episode from filename; with `-m`, mirror first then per-file meta |
 | Wipe | `--wipe` | `--metaEnema --overWrite` (ignores other meta flags) |
 | DeepScan | `--DeepScan` | Forward to AtomicParsley |
 | No tools | any metadata write; `--notools` alone | Clear encoding tool atom (`--encodingTool ""`). Default on Modify/`--meta`; view-only never clears. `--notools` alone clears tools without other field changes |
