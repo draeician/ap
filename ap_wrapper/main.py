@@ -233,21 +233,34 @@ def build_meta_command(
     season: str,
     episode: str,
     title: str,
+    args: argparse.Namespace,
 ) -> List[str]:
     """Build AtomicParsley argv for meta_update.pl-equivalent tagging.
+
+    Filename-derived title/show/season/episode are used as defaults, but an
+    explicit ``--title``/``--show``/``--season``/``--episode`` on the command
+    line overrides them. Other metadata switches (``--genre``, ``--desc``,
+    ``--longdesc``, ``--url``, ``--advisory``, ``--year``, ``--imdb``,
+    ``--thetvdb``) layer on top rather than being ignored.
 
     Args:
         cmd: AtomicParsley binary name/path
         file: Target media file
-        show: TV show name
-        season: Season number string
-        episode: Episode number string
-        title: Episode title string
+        show: TV show name derived from the filename
+        season: Season number string derived from the filename
+        episode: Episode number string derived from the filename
+        title: Episode title string derived from the filename
+        args: Parsed command line arguments (for switches layered on top)
 
     Returns:
         List[str]: Command argument list
     """
-    return [
+    title = args.title or title
+    show = args.show or show
+    season = args.season or season
+    episode = args.episode or episode
+
+    command = [
         cmd,
         file,
         "--title",
@@ -258,10 +271,30 @@ def build_meta_command(
         season,
         "--TVEpisodeNum",
         episode,
-        "--overWrite",
-        "--encodingTool",
-        "",
     ]
+
+    if args.genre:
+        command.extend(["--genre", args.genre])
+    if args.desc:
+        command.extend(["--longdesc", args.desc])
+    if args.longdesc:
+        command.extend(["--longdesc", args.longdesc])
+    if args.url:
+        command.extend(["--description", args.url])
+    if args.advisory:
+        command.extend(["--advisory", args.advisory])
+    if args.year:
+        command.extend(["--year", args.year])
+    if args.imdb:
+        command.extend(["--xID", f"IMDbID={args.imdb}"])
+    if args.thetvdb:
+        command.extend(["--xID", f"TheTVDB={args.thetvdb}"])
+
+    command.extend(["--encodingTool", ""])
+    command.append("--overWrite")
+    if args.DeepScan:
+        command.append("--DeepScan")
+    return command
 
 
 def is_url(text: str) -> bool:
@@ -637,7 +670,7 @@ def main() -> None:
                         )
                         run_atomicparsley(mirror_cmd, media_file=file)
                 command = build_meta_command(
-                    default_cmd, file, show, season, episode, title
+                    default_cmd, file, show, season, episode, title, args
                 )
                 print(" ".join(shlex.quote(part) for part in command))
                 run_atomicparsley(command, media_file=file)
